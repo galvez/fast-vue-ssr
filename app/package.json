@@ -1,0 +1,9 @@
+{
+  "devDependencies": {
+    "rollup": "^2.19.0",
+    "rollup-plugin-vue": "^5.1.9"
+  },
+  "dependencies": {
+    "vue-template-compiler": "^2.6.11"
+  }
+}
