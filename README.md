@@ -28,7 +28,7 @@ An ongoing experiment using [Rust][rust] and [QuickJS][quickjs] to server-side r
 [rust]: https://www.rust-lang.org/
 [quickjs]: https://bellard.org/quickjs/
 
-Inspired by [Xinjiang Shao's experiment][https://github.com/soleo/quickjs-docker].
+Inspired by [Xinjiang Shao's experiment](https://github.com/soleo/quickjs-docker).
 
 # TODO
 
