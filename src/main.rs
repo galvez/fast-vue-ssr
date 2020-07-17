@@ -3,23 +3,15 @@ extern crate lazy_static;
 
 pub mod pool;
 
+use crate::pool::ThreadPool;
+use quick_js::{Context, JsValue};
+use std::fs::read_to_string;
+use std::io;
 use std::sync::mpsc;
 use std::sync::mpsc::channel;
 use std::sync::Arc;
 use std::sync::Mutex;
-use std::io;
-use std::fs::read_to_string;
-use warp::{
-    self,
-    Reply,
-    filters,
-    Rejection,
-    reply,    
-    filters::BoxedFilter,
-    Filter,
-};
-use quick_js::{Context, JsValue};
-use crate::pool::ThreadPool;
+use warp::{self, filters, filters::BoxedFilter, reply, Filter, Rejection, Reply};
 
 #[derive(Clone)]
 struct Dummy<'a> {
@@ -29,22 +21,17 @@ struct Dummy<'a> {
 #[tokio::main]
 pub async fn main() -> io::Result<()> {
     let pool = Arc::new(Mutex::new(ThreadPool::new(64)));
-    let renderer = warp::path::full()
-        .map(move |path: filters::path::FullPath| {
-            let _pool = Arc::clone(&pool);
-            let s = path.as_str().to_string();
-            let result = _pool.lock().unwrap().execute(s);
-            result
-        });
+    let renderer = warp::path::full().map(move |path: filters::path::FullPath| {
+        let _pool = Arc::clone(&pool);
+        let s = path.as_str().to_string();
+        let result = _pool.lock().unwrap().execute(s);
+        result
+    });
 
     let routes = warp::path::full()
         .and(renderer)
-        .map(|path, result| {
-            format!("Getting path: {:?}!\nGot result: {:?}!", path, result)
-        });
-    warp::serve(routes)
-        .run(([127, 0, 0, 1], 3030))
-        .await;
+        .map(|path, result| format!("Getting path: {:?}!\nGot result: {:?}!", path, result));
+    warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
     Ok(())
 }
 

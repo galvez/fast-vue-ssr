@@ -1,15 +1,14 @@
-
-use std::thread;
+use quick_js::{Context, JsValue};
 use std::sync::mpsc;
 use std::sync::mpsc::channel;
 use std::sync::Arc;
 use std::sync::Mutex;
-use quick_js::{Context, JsValue};
+use std::thread;
 
 type Job = Box<SSRRequest>;
 
 pub struct ThreadPool {
-	workers: Vec<Worker>,
+    workers: Vec<Worker>,
     sender: mpsc::Sender<Job>,
 }
 
@@ -33,13 +32,9 @@ impl ThreadPool {
         }
         ThreadPool { workers, sender }
     }
-    pub fn execute(&self, path: String) -> String
-    {
+    pub fn execute(&self, path: String) -> String {
         let (sender, receiver) = mpsc::channel();
-        let ssr_request = SSRRequest {
-            path,
-            sender,
-        };
+        let ssr_request = SSRRequest { path, sender };
         let job = Box::new(ssr_request);
         self.sender.send(job).unwrap();
         receiver.recv().unwrap()
@@ -52,11 +47,13 @@ struct Worker {
 }
 
 impl Worker {
-   fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Job>>>, ctx: Context) -> Worker {
+    fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Job>>>, ctx: Context) -> Worker {
         let thread = thread::spawn(move || {
             let ctx = Context::new().unwrap();
             let shared_ctx = Arc::new(Mutex::new(&ctx));
-            let _loaded_renderer = ctx.eval("function renderer (str) { return `${str} is rendered`; }").unwrap();
+            let _loaded_renderer = ctx
+                .eval("function renderer (str) { return `${str} is rendered`; }")
+                .unwrap();
             let (tx, rx): (mpsc::Sender<Context>, mpsc::Receiver<Context>) = channel();
             let (shared_ctx, tx) = (Arc::clone(&shared_ctx), tx.clone());
             loop {
