@@ -48,10 +48,14 @@ impl Worker {
     fn new(receiver: Arc<Mutex<mpsc::Receiver<Job>>>, bundle: &'static str) -> Worker {
         thread::spawn(move || {
             let ctx = Context::new().unwrap();
-            let _set_vars = ctx.eval(r#"
+            let _set_vars = ctx
+                .eval(
+                    r#"
                 let result
                 let error
-            "#).unwrap();
+            "#,
+                )
+                .unwrap();
             let shared_ctx = Arc::new(Mutex::new(&ctx));
             let _loaded_renderer = ctx.eval(VUE_RENDERER).unwrap();
             let _loaded_bundle = ctx.eval(bundle).unwrap();

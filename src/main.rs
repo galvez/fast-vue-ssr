@@ -9,12 +9,12 @@ use renderer::RendererPool;
 use std::io;
 use std::sync::Arc;
 use std::sync::Mutex;
-use warp::{self, filters, Filter};
+use warp::{self, filters::path::FullPath, reply, Filter};
 
 #[tokio::main]
 pub async fn main() -> io::Result<()> {
     let pool = Arc::new(Mutex::new(RendererPool::new(64)));
-    let renderer = warp::path::full().map(move |path: filters::path::FullPath| {
+    let renderer = warp::path::full().map(move |path: FullPath| {
         let renderer = Arc::clone(&pool);
         let s = path.as_str().to_string();
         let result = renderer.lock().unwrap().render(s);
@@ -23,7 +23,7 @@ pub async fn main() -> io::Result<()> {
 
     let routes = warp::path::full()
         .and(renderer)
-        .map(|path, result| format!("Getting path: {:?}!\nGot result: {:?}!", path, result));
+        .map(|_, result| reply::html(result));
     warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
     Ok(())
 }
