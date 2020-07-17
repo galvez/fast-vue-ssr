@@ -131,11 +131,11 @@ Vue.component('Foobar', __vue_component__);
 
 Vue.mixin({
   beforeCreate () {
-    this.$req = this.$root.$options.$req
+    this.$req = this.$root.$options.$req;
   }
 });
 
-let warpReq = {}
+let warpReq = {};
 
 const appSettings = {
   template: `<div><Foobar>{{ $req.url }}</Foobar></div>`,
@@ -145,6 +145,6 @@ const appSettings = {
   get $req () {
     return warpReq
   },
-}
+};
 
-var app = new Vue(appSettings)
+var app = new Vue(appSettings);

@@ -4,16 +4,20 @@ Vue.component('Foobar', Foobar)
 
 Vue.mixin({
   beforeCreate () {
-    this.$req = this.$root.$options.req
+    this.$req = this.$root.$options.$req
   }
 })
 
-var app = new Vue({
+let warpReq = {}
+
+const appSettings = {
   template: `<div><Foobar>{{ $req.url }}</Foobar></div>`,
   data: {
     msg: 'hello'
   },
-  req: {
-    url: '/dummy',
+  get $req () {
+    return warpReq
   },
-})
+}
+
+var app = new Vue(appSettings)

@@ -33,7 +33,7 @@ pub async fn main() -> io::Result<()> {
         .and(header::headers_cloned())
         .map(move |path: FullPath, headers: HeaderMap| {
         println!("GET {}", path.as_str());
-        println!("Headers: {:?}", headers.keys().collect::<Vec<&HeaderName>>());
+        println!("Headers: {}", headers.len()); //keys().collect::<Vec<&HeaderName>>());
         let renderer = Arc::clone(&pool);
         let s = path.as_str().to_string();
         let result = renderer.lock().unwrap().render(s);
