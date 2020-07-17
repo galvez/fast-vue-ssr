@@ -1,19 +1,52 @@
+#[macro_use]
+extern crate lazy_static;
+
+pub mod pool;
+
+use std::sync::mpsc;
+use std::sync::mpsc::channel;
+use std::sync::Arc;
+use std::sync::Mutex;
 use std::io;
 use std::fs::read_to_string;
-use quick_js::Context;
+use warp::{
+    self,
+    Reply,
+    filters,
+    Rejection,
+    reply,    
+    filters::BoxedFilter,
+    Filter,
+};
+use quick_js::{Context, JsValue};
+use crate::pool::ThreadPool;
 
-static RENDERER: &'static str = "./src/renderer.js";
-static RENDER: &'static str = "./src/render.js";
-static BUNDLE: &'static str = "./app/bundle.js";
+#[derive(Clone)]
+struct Dummy<'a> {
+    x: &'a str,
+}
 
-pub fn main() -> io::Result<()> {
-    let context = Context::new().unwrap();
-	let renderer = read_to_string(RENDERER)?;
-	let render = read_to_string(RENDER)?;
-	let bundle = read_to_string(BUNDLE)?;
-    let _loaded_renderer = context.eval(&renderer).unwrap();
-    let _loaded_bundle = context.eval(&bundle).unwrap();
-    let result = context.eval(&render).unwrap();
-    println!("{:?}", result);
+#[tokio::main]
+pub async fn main() -> io::Result<()> {
+    let pool = Arc::new(Mutex::new(ThreadPool::new(64)));
+    let renderer = warp::path::full()
+        .map(move |path: filters::path::FullPath| {
+            let _pool = Arc::clone(&pool);
+            let s = path.as_str().to_string();
+            let result = _pool.lock().unwrap().execute(s);
+            result
+        });
+
+    let routes = warp::path::full()
+        .and(renderer)
+        .map(|path, result| {
+            format!("Getting path: {:?}!\nGot result: {:?}!", path, result)
+        });
+    warp::serve(routes)
+        .run(([127, 0, 0, 1], 3030))
+        .await;
     Ok(())
 }
+
+// https://docs.rs/surf/1.0.3/surf/
+// https://docs.rs/redis/0.16.0/redis/
