@@ -53,8 +53,8 @@ impl Worker {
             let shared_ctx = Arc::new(Mutex::new(&ctx));
             let _loaded_renderer = ctx.eval(VUE_RENDERER).unwrap();
             let _loaded_bundle = ctx.eval(bundle).unwrap();
-            let (tx, rx): (mpsc::Sender<Context>, mpsc::Receiver<Context>) = channel();
-            let (shared_ctx, tx) = (Arc::clone(&shared_ctx), tx.clone());
+            let (tx, _): (mpsc::Sender<Context>, mpsc::Receiver<Context>) = channel();
+            let (shared_ctx, _) = (Arc::clone(&shared_ctx), tx.clone());
             loop {
                 let ctx = shared_ctx.lock().unwrap();
                 let job = receiver.lock().unwrap().recv().unwrap();

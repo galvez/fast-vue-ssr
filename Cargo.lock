@@ -4,7 +4,7 @@
 name = "Vuni"
 version = "0.1.0"
 dependencies = [
- "lazy_static 0.1.16",
+ "lazy_static",
  "parking_lot",
  "pool",
  "poolcache",
@@ -465,12 +465,6 @@ dependencies = [
  "winapi 0.2.8",
  "winapi-build",
 ]
-
-[[package]]
-name = "lazy_static"
-version = "0.1.16"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cf186d1a8aa5f5bee5fd662bc9c1b949e0259e1bcc379d1f006847b0080c7417"
 
 [[package]]
 name = "lazy_static"
@@ -1167,7 +1161,7 @@ dependencies = [
  "fnv",
  "futures-core",
  "iovec",
- "lazy_static 1.4.0",
+ "lazy_static",
  "memchr",
  "mio",
  "pin-project-lite",
