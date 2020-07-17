@@ -58,11 +58,12 @@ impl Worker {
                 .unwrap();
             let shared_ctx = Arc::new(Mutex::new(&ctx));
             let _loaded_renderer = ctx.eval(VUE_RENDERER).unwrap();
-            let _loaded_bundle = ctx.eval(bundle).unwrap();
+            let _loaded_bundle = ctx.eval(format!("{}\ntrue", bundle).as_str()).unwrap();
             let shared_ctx = Arc::clone(&shared_ctx);
             loop {
                 let ctx = shared_ctx.lock().unwrap();
                 let job = receiver.lock().unwrap().recv().unwrap();
+                let _set_url = ctx.eval(format!("warpReq.url = '{}'", &job.url).as_str()).unwrap();
                 let result = ctx.eval(RENDER).unwrap();
                 job.sender.send(result.into_string().unwrap()).unwrap();
             }

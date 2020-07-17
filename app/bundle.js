@@ -128,11 +128,23 @@ __vue_render__._withStripped = true;
   );
 
 Vue.component('Foobar', __vue_component__);
-var app = new Vue({
-  template: `<div><Foobar>{{ msg }}</Foobar></div>`,
-  data: {
-    msg: 'hello'
+
+Vue.mixin({
+  beforeCreate () {
+    this.$req = this.$root.$options.$req
   }
 });
 
-true
+let warpReq = {}
+
+const appSettings = {
+  template: `<div><Foobar>{{ $req.url }}</Foobar></div>`,
+  data: {
+    msg: 'hello'
+  },
+  get $req () {
+    return warpReq
+  },
+}
+
+var app = new Vue(appSettings)
