@@ -1,10 +1,10 @@
 
 // Leaving this here because I have a feeling it'll be needed soon
-// #[macro_use] extern crate lazy_static;
+#[macro_use] extern crate lazy_static;
 
 mod renderer;
+mod vue;
 
-use std::fs::read_to_string;
 use std::io;
 use std::sync::mpsc;
 use std::sync::mpsc::channel;
@@ -26,9 +26,9 @@ use renderer::RendererPool;
 pub async fn main() -> io::Result<()> {
     let pool = Arc::new(Mutex::new(RendererPool::new(64)));
     let renderer = warp::path::full().map(move |path: filters::path::FullPath| {
-        let _pool = Arc::clone(&pool);
+        let renderer = Arc::clone(&pool);
         let s = path.as_str().to_string();
-        let result = _pool.lock().unwrap().execute(s);
+        let result = renderer.lock().unwrap().render(s);
         result
     });
 

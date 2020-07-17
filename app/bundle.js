@@ -128,7 +128,7 @@ __vue_render__._withStripped = true;
   );
 
 Vue.component('Foobar', __vue_component__);
-var vmHello = new Vue({
+var app = new Vue({
   template: `<div><Foobar>{{ msg }}</Foobar></div>`,
   data: {
     msg: 'hello'
