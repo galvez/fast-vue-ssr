@@ -1,12 +1,11 @@
-
+use crate::vue::{RENDER, VUE_RENDERER};
 use quick_js::Context;
+use std::fs::read_to_string;
 use std::sync::mpsc;
 use std::sync::mpsc::channel;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
-use std::fs::read_to_string;
-use crate::vue::{VUE_RENDERER, RENDER};
 
 static BUNDLE_PATH: &'static str = "./app/bundle.js";
 
@@ -26,18 +25,13 @@ impl RendererPool {
     pub fn new(size: usize) -> RendererPool {
         assert!(size > 0);
         let (sender, receiver) = mpsc::channel();
-        let receiver = Arc::new(
-            Mutex::new(receiver)
-        );
+        let receiver = Arc::new(Mutex::new(receiver));
         lazy_static! {
             static ref BUNDLE: String = read_to_string(BUNDLE_PATH).unwrap();
         }
         let mut workers = Vec::with_capacity(size);
         for _ in 0..size {
-            workers.push(Worker::new(
-                Arc::clone(&receiver),
-                &BUNDLE
-            ));
+            workers.push(Worker::new(Arc::clone(&receiver), &BUNDLE));
         }
         RendererPool { workers, sender }
     }
@@ -50,8 +44,7 @@ impl RendererPool {
     }
 }
 
-struct Worker {
-}
+struct Worker {}
 
 impl Worker {
     fn new<'a>(receiver: Arc<Mutex<mpsc::Receiver<Job>>>, bundle: &'static str) -> Worker {

@@ -1,26 +1,18 @@
-
 // Leaving this here because I have a feeling it'll be needed soon
-#[macro_use] extern crate lazy_static;
+#[macro_use]
+extern crate lazy_static;
 
 mod renderer;
 mod vue;
 
+use quick_js::Context;
+use renderer::RendererPool;
 use std::io;
 use std::sync::mpsc;
 use std::sync::mpsc::channel;
 use std::sync::Arc;
 use std::sync::Mutex;
-use warp::{
-    self,
-    filters,
-    filters::BoxedFilter,
-    reply,
-    Filter,
-    Rejection,
-    Reply
-};
-use quick_js::Context;
-use renderer::RendererPool;
+use warp::{self, filters, filters::BoxedFilter, reply, Filter, Rejection, Reply};
 
 #[tokio::main]
 pub async fn main() -> io::Result<()> {
