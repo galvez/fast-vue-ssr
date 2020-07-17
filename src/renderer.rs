@@ -5,20 +5,20 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
 
-type Job = Box<SSRRequest>;
+type Job = Box<RendererRequest>;
 
-pub struct ThreadPool {
-    workers: Vec<Worker>,
-    sender: mpsc::Sender<Job>,
-}
-
-struct SSRRequest {
+struct RendererRequest {
     path: String,
     sender: mpsc::Sender<String>,
 }
 
-impl ThreadPool {
-    pub fn new(size: usize) -> ThreadPool {
+pub struct RendererPool {
+    workers: Vec<Worker>,
+    sender: mpsc::Sender<Job>,
+}
+
+impl RendererPool {
+    pub fn new(size: usize) -> RendererPool {
         assert!(size > 0);
         let (sender, receiver) = mpsc::channel();
         let receiver = Arc::new(Mutex::new(receiver));
@@ -30,11 +30,11 @@ impl ThreadPool {
                 Context::new().unwrap(),
             ));
         }
-        ThreadPool { workers, sender }
+        RendererPool { workers, sender }
     }
     pub fn execute(&self, path: String) -> String {
         let (sender, receiver) = mpsc::channel();
-        let ssr_request = SSRRequest { path, sender };
+        let ssr_request = RendererRequest { path, sender };
         let job = Box::new(ssr_request);
         self.sender.send(job).unwrap();
         receiver.recv().unwrap()

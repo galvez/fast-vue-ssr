@@ -1,26 +1,30 @@
-#[macro_use]
-extern crate lazy_static;
 
-pub mod pool;
+// Leaving this here because I have a feeling it'll be needed soon
+// #[macro_use] extern crate lazy_static;
 
-use crate::pool::ThreadPool;
-use quick_js::{Context, JsValue};
+mod renderer;
+
 use std::fs::read_to_string;
 use std::io;
 use std::sync::mpsc;
 use std::sync::mpsc::channel;
 use std::sync::Arc;
 use std::sync::Mutex;
-use warp::{self, filters, filters::BoxedFilter, reply, Filter, Rejection, Reply};
-
-#[derive(Clone)]
-struct Dummy<'a> {
-    x: &'a str,
-}
+use warp::{
+    self,
+    filters,
+    filters::BoxedFilter,
+    reply,
+    Filter,
+    Rejection,
+    Reply
+};
+use quick_js::Context;
+use renderer::RendererPool;
 
 #[tokio::main]
 pub async fn main() -> io::Result<()> {
-    let pool = Arc::new(Mutex::new(ThreadPool::new(64)));
+    let pool = Arc::new(Mutex::new(RendererPool::new(64)));
     let renderer = warp::path::full().map(move |path: filters::path::FullPath| {
         let _pool = Arc::clone(&pool);
         let s = path.as_str().to_string();
