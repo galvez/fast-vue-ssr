@@ -1,10 +1,7 @@
 pub static RENDER: &'static str = r###"
-let error
-let result
-
 renderVueComponentToString(app, (err, res) => {
   if (err) {
-    error = err.message
+    error = err.toString()
   }
   result = res
 })

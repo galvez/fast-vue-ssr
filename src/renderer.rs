@@ -2,7 +2,6 @@ use crate::vue::{RENDER, VUE_RENDERER};
 use quick_js::Context;
 use std::fs::read_to_string;
 use std::sync::mpsc;
-use std::sync::mpsc::channel;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
@@ -17,7 +16,6 @@ struct RendererRequest {
 }
 
 pub struct RendererPool {
-    workers: Vec<Worker>,
     sender: mpsc::Sender<Job>,
 }
 
@@ -33,7 +31,7 @@ impl RendererPool {
         for _ in 0..size {
             workers.push(Worker::new(Arc::clone(&receiver), &BUNDLE));
         }
-        RendererPool { workers, sender }
+        RendererPool { sender }
     }
     pub fn render(&self, url: String) -> String {
         let (sender, receiver) = mpsc::channel();
@@ -47,18 +45,20 @@ impl RendererPool {
 struct Worker {}
 
 impl Worker {
-    fn new<'a>(receiver: Arc<Mutex<mpsc::Receiver<Job>>>, bundle: &'static str) -> Worker {
+    fn new(receiver: Arc<Mutex<mpsc::Receiver<Job>>>, bundle: &'static str) -> Worker {
         thread::spawn(move || {
             let ctx = Context::new().unwrap();
+            let _set_vars = ctx.eval(r#"
+                let result
+                let error
+            "#).unwrap();
             let shared_ctx = Arc::new(Mutex::new(&ctx));
             let _loaded_renderer = ctx.eval(VUE_RENDERER).unwrap();
             let _loaded_bundle = ctx.eval(bundle).unwrap();
-            let (tx, _): (mpsc::Sender<Context>, mpsc::Receiver<Context>) = channel();
-            let (shared_ctx, _) = (Arc::clone(&shared_ctx), tx.clone());
+            let shared_ctx = Arc::clone(&shared_ctx);
             loop {
                 let ctx = shared_ctx.lock().unwrap();
                 let job = receiver.lock().unwrap().recv().unwrap();
-                println!("Worker got a job; executing.");
                 let result = ctx.eval(RENDER).unwrap();
                 job.sender.send(result.into_string().unwrap()).unwrap();
             }

@@ -1,5 +1,5 @@
 [package]
-name = "Vuni"
+name = "fast-vue-ssr"
 version = "0.1.0"
 authors = ["Jonas Galvez <jonasgalvez@gmail.com>"]
 edition = "2018"
