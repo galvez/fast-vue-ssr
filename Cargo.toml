@@ -8,4 +8,10 @@ edition = "2018"
 
 [dependencies]
 quick-js = "0.3.3"
+tokio = { version = "0.2", features = ["macros"] }
+warp = "0.2"
+lazy_static = "0.1.2"
+pool = "0.1.4"
+poolcache = "0.1.1"
+parking_lot = "0.11.0"
 
