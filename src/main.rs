@@ -1,19 +1,32 @@
+// Leaving this here because I have a feeling it'll be needed soon
+#[macro_use]
+extern crate lazy_static;
+
+mod renderer;
+mod vue;
+
+use renderer::RendererPool;
 use std::io;
-use std::fs::read_to_string;
-use quick_js::Context;
+use std::sync::Arc;
+use std::sync::Mutex;
+use warp::{self, filters, Filter};
 
-static RENDERER: &'static str = "./src/renderer.js";
-static RENDER: &'static str = "./src/render.js";
-static BUNDLE: &'static str = "./app/bundle.js";
+#[tokio::main]
+pub async fn main() -> io::Result<()> {
+    let pool = Arc::new(Mutex::new(RendererPool::new(64)));
+    let renderer = warp::path::full().map(move |path: filters::path::FullPath| {
+        let renderer = Arc::clone(&pool);
+        let s = path.as_str().to_string();
+        let result = renderer.lock().unwrap().render(s);
+        result
+    });
 
-pub fn main() -> io::Result<()> {
-    let context = Context::new().unwrap();
-	let renderer = read_to_string(RENDERER)?;
-	let render = read_to_string(RENDER)?;
-	let bundle = read_to_string(BUNDLE)?;
-    let _loaded_renderer = context.eval(&renderer).unwrap();
-    let _loaded_bundle = context.eval(&bundle).unwrap();
-    let result = context.eval(&render).unwrap();
-    println!("{:?}", result);
+    let routes = warp::path::full()
+        .and(renderer)
+        .map(|path, result| format!("Getting path: {:?}!\nGot result: {:?}!", path, result));
+    warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
     Ok(())
 }
+
+// https://docs.rs/surf/1.0.3/surf/
+// https://docs.rs/redis/0.16.0/redis/
