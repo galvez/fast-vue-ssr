@@ -1,10 +1,10 @@
-use crate::vue::{RENDER, VUE_RENDERER};
-use quick_js::Context;
 use std::fs::read_to_string;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
+use quick_js::Context;
+use crate::vue::{RENDER, VUE_RENDERER};
 
 static BUNDLE_PATH: &'static str = "./app/bundle.js";
 
@@ -49,12 +49,7 @@ impl Worker {
         thread::spawn(move || {
             let ctx = Context::new().unwrap();
             let _set_vars = ctx
-                .eval(
-                    r#"
-                let result
-                let error
-            "#,
-                )
+                .eval("let result; let error; true")
                 .unwrap();
             let shared_ctx = Arc::new(Mutex::new(&ctx));
             let _loaded_renderer = ctx.eval(VUE_RENDERER).unwrap();

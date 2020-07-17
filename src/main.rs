@@ -1,14 +1,17 @@
-// Leaving this here because I have a feeling it'll be needed soon
 #[macro_use]
 extern crate lazy_static;
 
-mod renderer;
+// exposes renderVueComponentToString()
+// See https://ssr.vuejs.org/guide/non-node.html for details
 mod vue;
+mod renderer;
 
 use renderer::RendererPool;
 use std::io;
-use std::sync::Arc;
-use std::sync::Mutex;
+use std::sync::{
+    Arc,
+    Mutex
+};
 use warp::{
     self,
     header,
