@@ -9,21 +9,42 @@ use renderer::RendererPool;
 use std::io;
 use std::sync::Arc;
 use std::sync::Mutex;
-use warp::{self, filters::path::FullPath, reply, Filter};
+use warp::{
+    self,
+    header,
+    filters::path::{
+        full,
+        FullPath,
+    },
+    reply,
+    Filter,
+    http::{
+        HeaderMap,
+        header::{
+            HeaderName,
+        },
+    },
+};
 
 #[tokio::main]
 pub async fn main() -> io::Result<()> {
     let pool = Arc::new(Mutex::new(RendererPool::new(64)));
-    let renderer = warp::path::full().map(move |path: FullPath| {
+    let renderer = full()
+        .and(header::headers_cloned())
+        .map(move |path: FullPath, headers: HeaderMap| {
+        println!("GET {}", path.as_str());
+        println!("Headers: {:?}", headers.keys().collect::<Vec<&HeaderName>>());
         let renderer = Arc::clone(&pool);
         let s = path.as_str().to_string();
         let result = renderer.lock().unwrap().render(s);
         result
     });
 
-    let routes = warp::path::full()
+    let routes = full()
         .and(renderer)
-        .map(|_, result| reply::html(result));
+        .map(|_, result| {
+            reply::html(result)
+        });
     warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
     Ok(())
 }
