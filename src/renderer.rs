@@ -6,7 +6,16 @@ use std::thread;
 use quick_js::Context;
 use crate::vue::{RENDER, VUE_RENDERER};
 
-static BUNDLE_PATH: &'static str = "./app/bundle.js";
+static BUNDLE_PATH: &'static str = "./app/dist/server.js";
+
+pub static HTML: &'static str = r###"
+<html>
+  <body>
+    <div id="app">
+    </div>
+  </body>
+</html>
+"###;
 
 type Job = Box<RendererRequest>;
 
@@ -58,7 +67,8 @@ impl Worker {
             loop {
                 let ctx = shared_ctx.lock().unwrap();
                 let job = receiver.lock().unwrap().recv().unwrap();
-                let _set_url = ctx.eval(format!("warpReq.url = '{}'", &job.url).as_str()).unwrap();
+                let _set_url = ctx.eval(format!("$ssrContext.req.url = '{}'; true", &job.url).as_str()).unwrap();
+                let _push_url = ctx.eval("router.push($ssrContext.req.url); true").unwrap();
                 let result = ctx.eval(RENDER).unwrap();
                 job.sender.send(result.into_string().unwrap()).unwrap();
             }

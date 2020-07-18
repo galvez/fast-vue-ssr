@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "build": "rollup -c rollup.config.js"
+  },
   "devDependencies": {
     "rollup": "^2.19.0",
     "rollup-plugin-vue": "^5.1.9"
