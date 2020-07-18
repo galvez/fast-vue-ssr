@@ -1,12 +1,28 @@
 import vue from 'rollup-plugin-vue'
 
-export default {
-  input: 'src/index.js',
-  output: {
-    file: 'bundle.js',
-    format: 'esm'
+export default [
+  {
+    input: 'src/client.js',
+    output: {
+      dir: 'dist',
+      format: 'esm',
+    },
+    plugins: [
+      vue()
+    ]
   },
-  plugins: [
-    vue()
-  ]
-}
+  {
+    input: 'src/server.js',
+    output: {
+      dir: 'dist',
+      format: 'esm'
+    },
+    plugins: [
+      vue({
+        // template: {
+        //   optimizeSSR: true,
+        // }
+      })
+    ]
+  },
+]

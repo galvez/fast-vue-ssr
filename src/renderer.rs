@@ -4,9 +4,23 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
 use quick_js::Context;
-use crate::vue::{RENDER, VUE_RENDERER};
+use crate::vue::{
+    RENDER,
+    VUE,
+    VUE_SERVER_RENDERER,
+    VUE_ROUTER,
+};
 
-static BUNDLE_PATH: &'static str = "./app/bundle.js";
+static BUNDLE_PATH: &'static str = "./app/dist/server.js";
+
+pub static HTML: &'static str = r###"
+<html>
+  <body>
+    <div id="app">
+    </div>
+  </body>
+</html>
+"###;
 
 type Job = Box<RendererRequest>;
 
@@ -52,13 +66,16 @@ impl Worker {
                 .eval("let result; let error; true")
                 .unwrap();
             let shared_ctx = Arc::new(Mutex::new(&ctx));
-            let _loaded_renderer = ctx.eval(VUE_RENDERER).unwrap();
+            let _loaded_vue = ctx.eval(VUE).unwrap();
+            let _loaded_vue_server_renderer = ctx.eval(VUE_SERVER_RENDERER).unwrap();
+            let _loaded_vue_router = ctx.eval(VUE_ROUTER).unwrap();
             let _loaded_bundle = ctx.eval(format!("{}\ntrue", bundle).as_str()).unwrap();
             let shared_ctx = Arc::clone(&shared_ctx);
             loop {
                 let ctx = shared_ctx.lock().unwrap();
                 let job = receiver.lock().unwrap().recv().unwrap();
-                let _set_url = ctx.eval(format!("warpReq.url = '{}'", &job.url).as_str()).unwrap();
+                let _set_url = ctx.eval(format!("$ssrContext.req.url = '{}'; true", &job.url).as_str()).unwrap();
+                let _push_url = ctx.eval("router.push($ssrContext.req.url); true").unwrap();
                 let result = ctx.eval(RENDER).unwrap();
                 job.sender.send(result.into_string().unwrap()).unwrap();
             }
