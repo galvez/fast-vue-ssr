@@ -16,7 +16,7 @@ if (error) {
 }
 "###;
 
-pub static VUE_RENDERER: &'static str = r###"
+pub static VUE: &'static str = r###"
 const process = {
   env: {}
 }
@@ -12014,7 +12014,11 @@ function getOuterHTML (el) {
 Vue.compile = compileToFunctions;
 
 // export default Vue;
+"###;
 
+// vue-server-render@2.6.11
+// https://github.com/vuejs/vue/blob/v2.6.11/packages/vue-server-renderer/basic.js
+pub static VUE_SERVER_RENDERER: &'static str = r###"
 var emptyObject = Object.freeze({});
 
 // These helpers produce better VM code in JS engines due to their
@@ -20962,7 +20966,11 @@ var renderVueComponentToString = createBasicRenderer({
   isUnaryTag: isUnaryTag,
   canBeLeftOpenTag: canBeLeftOpenTag
 });
+"###;
 
+// vue-router@v3.3.4
+// https://github.com/vuejs/vue-router/blob/v3.3.4/dist/vue-router.esm.js
+pub static VUE_ROUTER: &'static str = r###"
 /*!
   * vue-router v3.3.4
   * (c) 2020 Evan You
@@ -23973,9 +23981,5 @@ function createHref (base, fullPath, mode) {
 
 VueRouter.install = install;
 VueRouter.version = '3.3.4';
-
-if (inBrowser && window.Vue) {
-  window.Vue.use(VueRouter);
-}
 
 "###;
