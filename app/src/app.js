@@ -14,7 +14,7 @@ let $ssrContext = {
 
 const appSettings = router => ({
   router,
-  render: h => {
+  render (h) {
     return h(defaultLayout)
   },
   get $ssrContext () {
