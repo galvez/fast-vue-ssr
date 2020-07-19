@@ -24,6 +24,10 @@ pub async fn main() -> io::Result<()> {
 [quickjs]: https://bellard.org/quickjs/
 [warp]: https://github.com/seanmonstar/warp
 
+So far using a thread pool and channels to communicate with the Warp route handler. The goal is to get to full access to a Node-like `IncomingMessage` object as `$ssrContext.req`. It alrady includes a `/static` handler and serves a code-splitted build on the client via Rollup.
+
+Node outperforms QuickJS by a wide margin. Especially with enough cores and memory. However, QuickJS is very small and has very low memory consumption, so running it threaded in a Rust shell makes it possible to have very high throughput using very few resources in comparison.
+
 Inspired by [Xinjiang Shao's experiment](https://github.com/soleo/quickjs-docker).
 
 ## Running
