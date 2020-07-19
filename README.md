@@ -2,7 +2,6 @@
 
 An ongoing experiment using [Rust][rust], [Warp][warp] and [QuickJS][quickjs] to server-side render Vue.js applications.
 
-
 ```rust
 use renderer::RendererPool;
 #[tokio::main]
@@ -27,8 +26,10 @@ pub async fn main() -> io::Result<()> {
 
 Inspired by [Xinjiang Shao's experiment](https://github.com/soleo/quickjs-docker).
 
-# TODO
+## Running
 
-- [ ] Add build command (façade to rollup)
-- [ ] Add command-line argument to set bundle path
-- [ ] Serve /* and SSR Vue bundle with Warp
+1. [Install Rust](https://www.rust-lang.org/tools/install).
+2. `npm install`
+3. `npm test`
+
+Or `npm run build` for generating the Rust binary.
