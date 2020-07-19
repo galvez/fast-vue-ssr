@@ -1,20 +1,25 @@
+
+import replace from '@rollup/plugin-replace'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 import vue from 'rollup-plugin-vue'
 
 export default [
   {
-    input: 'src/client.js',
+    input: 'app/client.js',
     output: {
       dir: 'dist',
       format: 'es',
     },
     plugins: [
+      nodeResolve(),
       vue(),
-      nodeResolve()
+      replace({
+        'process.env.NODE_ENV': '"production"',
+      }),
     ]
   },
   {
-    input: 'src/server.js',
+    input: 'app/server.js',
     output: {
       dir: 'dist',
       format: 'esm',

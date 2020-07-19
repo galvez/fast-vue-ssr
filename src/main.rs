@@ -23,31 +23,42 @@ use warp::{
     Filter,
     http::{
         HeaderMap,
-        header::{
-            HeaderName,
-        },
+        // header::{
+        //     HeaderName,
+        // },
     },
 };
 
+pub static IMPORT: &'static str = r###"
+<script type="module" src="./static/client.js"></script>
+"###;
+
 #[tokio::main]
 pub async fn main() -> io::Result<()> {
-    let pool = Arc::new(Mutex::new(RendererPool::new(64)));
+    let dist = warp::path("static")
+        .and(warp::fs::dir("./dist/"));
+
+    let r_pool = Arc::new(Mutex::new(RendererPool::new(64)));
+
     let renderer = full()
         .and(header::headers_cloned())
         .map(move |path: FullPath, headers: HeaderMap| {
-        println!("GET {}", path.as_str());
-        println!("Headers: {}", headers.len()); //keys().collect::<Vec<&HeaderName>>());
-        let renderer = Arc::clone(&pool);
-        let s = path.as_str().to_string();
-        let result = renderer.lock().unwrap().render(s);
-        result
-    });
-
-    let routes = full()
-        .and(renderer)
-        .map(|_, result| {
-            reply::html(result)
+            println!("GET {}", path.as_str());
+            println!("Headers: {}", headers.len()); //keys().collect::<Vec<&HeaderName>>());
+            let renderer = Arc::clone(&r_pool);
+            let s = path.as_str().to_string();
+            let result = renderer.lock().unwrap().render(s);
+            result
+        })
+        .map(|result| {
+            println!("{}", result);            
+            reply::html(
+                format!("{}{}", IMPORT, result)
+            )
         });
+
+    let routes = dist.or(renderer);
+
     warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
     Ok(())
 }
