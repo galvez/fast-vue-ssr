@@ -20,8 +20,6 @@ Vue.mixin({
   }
 })
 
-let ready = false
-
 let $ssrContext = {
   req: {
   }
@@ -31,7 +29,6 @@ true
 "###;
 
 static ROUTER_READY: &'static str = r###"
-ready = false
 router.push($ssrContext.req.url)
 
 new Promise((resolve) => {
