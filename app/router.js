@@ -1,15 +1,14 @@
-import Home from './pages/home.vue'
-import Other from './pages/other.vue'
+
 export default Router => new Router({
   mode: 'history',
   routes: [
     {
       path: '/',
-      component: Home,
+      component: () => import('./pages/home.vue').then(m => m.default),
     },
     {
       path: '/other',
-      component: Other,
+      component: () => import('./pages/other.vue').then(m => m.default),
     },
   ],
 })
