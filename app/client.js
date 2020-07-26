@@ -6,12 +6,18 @@ import createApp from './app'
 
 Vue.use(Router)
 
-const { app, router } = createApp(
-  {
-    req: {},
+window.$ssrContext = {
+  data: window.__ASYNC_DATA__,
+  req: {
   },
+}
+
+const { app, router } = createApp(
+  window.$ssrContext,
   Vue,
   getRouter(Router),
 )
 
-router.onReady(() => app.$mount('#app'))
+router.onReady(() => {
+  app.$mount('#app')
+})

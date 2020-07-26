@@ -6,6 +6,7 @@ Vue.mixin({
 })
 
 let $ssrContext = {
+  data: null,
   req: {
   }
 }

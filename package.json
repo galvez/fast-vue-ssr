@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "test": "npm run build-app && cargo run",    
+    "test": "npm run build-app && cargo run",
     "build-app": "rimraf dist && rollup -c rollup.config.js",
     "build": "npm run build-app && cargo build"
   },

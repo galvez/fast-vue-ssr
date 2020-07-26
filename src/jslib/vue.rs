@@ -1,4 +1,4 @@
-pub static source: &'static str = r###"
+pub static SRC: &'static str = r###"
 const process = {
   env: {}
 }

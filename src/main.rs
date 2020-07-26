@@ -5,9 +5,9 @@ extern crate lazy_static;
 // See https://ssr.vuejs.org/guide/non-node.html for details
 mod jslib;
 mod renderer;
-mod request;
+mod data;
 
-use surf;
+use std::collections::HashMap;
 use renderer::{
     pool::RendererPool,
 };
@@ -24,53 +24,23 @@ use warp::{
         FullPath,
     },
     reply,
-    Rejection,
     Filter,
     http::{
+        method::Method,
         HeaderMap,
-        // header::{
-        //     HeaderName,
-        // },
+        header::{
+            HeaderName,
+            HeaderValue,
+        },
     },
 };
 
-use std::boxed::Box;
-use std::error::Error;
-use std::marker::Send;
-use std::marker::Sync;
-use serde::{Deserialize, Serialize};
-use crate::request::RendererRequest;
+use crate::renderer::request::RendererRequest;
+use crate::data::get_home_data;
 
 pub static IMPORT: &'static str = r###"
 <script type="module" src="./static/client.js"></script>
 "###;
-
-
-#[derive(Deserialize, Serialize)]
-struct Ip {
-    ip: String
-}
-
-type HttpCallError = dyn Error + Send + Sync + 'static;
-
-pub async fn get_home_data() -> Result<String, Rejection>  {
-    let result = sample_http_call().await;
-    let data = result.unwrap();
-    println!("get_home_data result {:?}", &data);
-    Ok(data)
-}
-
-async fn sample_http_call() -> Result<String, Box<HttpCallError>> {
-    let uri = "https://httpbin.org/post";
-    let data = &Ip { ip: "129.0.0.1".into() };
-    let res = surf::post(uri).body_json(data)?.await?;
-    assert_eq!(res.status(), 200);
-
-    let uri = "https://api.ipify.org?format=json";
-    let Ip { ip } = surf::get(uri).recv_json().await?;
-    assert!(ip.len() > 10);
-    Ok(ip)
-}
 
 #[tokio::main]
 pub async fn main() -> io::Result<()> {
@@ -79,28 +49,47 @@ pub async fn main() -> io::Result<()> {
 
     let r_pool = Arc::new(Mutex::new(RendererPool::new(64)));
 
+    // Run async data fetch if path === '/'
     let home_data = warp::path::end()
         .and_then(get_home_data);
 
     let renderer = full()
+        .and(warp::method())
         .and(header::headers_cloned())
         .and(home_data)
-        .map(move |path: FullPath, headers: HeaderMap, data| {
-            println!("data: {}", data);
-            println!("GET {}", path.as_str());
-            println!("Headers: {}", headers.len()); //keys().collect::<Vec<&HeaderName>>());
+        .map(move |
+            path: FullPath,
+            method: Method,
+            headers: HeaderMap,
+            async_data: String,
+        | {
+            println!("{} {}", method, path.as_str());
+            let headers = format!(
+                "{:?}",
+                headers
+                    .iter()
+                    .collect::<HashMap<&HeaderName, &HeaderValue>>()
+            );
             let renderer = Arc::clone(&r_pool);
             let url = path.as_str().to_string();
-            let ssr_request = RendererRequest::new(url);
+            let ssr_request = RendererRequest::new(
+                url,
+                method.to_string(),
+                headers,
+                async_data.to_owned(),
+            );
             let result = renderer.lock()
                 .unwrap()
                 .render(ssr_request);
-            result
+            (result, async_data)
         })
-        .map(|result| {
-            println!("{}", result);            
+        .map(|(result, async_data)| {
+            let async_data = format!(
+                "<script>window.__ASYNC_DATA__ = '{}';</script>",
+                async_data
+            );
             reply::html(
-                format!("{}{}", IMPORT, result)
+                format!("{}{}{}", async_data, IMPORT, result)
             )
         });
 

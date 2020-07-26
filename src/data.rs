@@ -2,15 +2,9 @@ use std::boxed::Box;
 use std::error::Error;
 use std::marker::Send;
 use std::marker::Sync;
-use futures::future::{Future};
-use async_std::task;
-
-use warp::{
-    Reply, Rejection,
-    reply,
-};
 
 use serde::{Deserialize, Serialize};
+use warp::Rejection;
 
 #[derive(Deserialize, Serialize)]
 struct Ip {
@@ -19,12 +13,11 @@ struct Ip {
 
 type HttpCallError = dyn Error + Send + Sync + 'static;
 
-pub async fn get_home_data() -> Result<impl Reply, Rejection> {
-    let reply = format!("Getting page {} with locale {}!", slug, locale);
+pub async fn get_home_data() -> Result<String, Rejection>  {
     let result = sample_http_call().await;
-    println!("{:?}", &result);
-    println!("{}", &reply);
-    Ok(reply::html(reply))
+    let data = result.unwrap();
+    // println!("get_home_data result {:?}", &data);
+    Ok(data)
 }
 
 async fn sample_http_call() -> Result<String, Box<HttpCallError>> {
