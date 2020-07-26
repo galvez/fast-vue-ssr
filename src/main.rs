@@ -3,10 +3,14 @@ extern crate lazy_static;
 
 // exposes renderVueComponentToString()
 // See https://ssr.vuejs.org/guide/non-node.html for details
-mod vue;
+mod jslib;
 mod renderer;
+mod data;
 
-use renderer::RendererPool;
+use std::collections::HashMap;
+use renderer::{
+    pool::RendererPool,
+};
 use std::io;
 use std::sync::{
     Arc,
@@ -22,12 +26,17 @@ use warp::{
     reply,
     Filter,
     http::{
+        method::Method,
         HeaderMap,
-        // header::{
-        //     HeaderName,
-        // },
+        header::{
+            HeaderName,
+            HeaderValue,
+        },
     },
 };
+
+use crate::renderer::request::RendererRequest;
+use crate::data::get_home_data;
 
 pub static IMPORT: &'static str = r###"
 <script type="module" src="./static/client.js"></script>
@@ -40,20 +49,47 @@ pub async fn main() -> io::Result<()> {
 
     let r_pool = Arc::new(Mutex::new(RendererPool::new(64)));
 
+    // Run async data fetch if path === '/'
+    let home_data = warp::path::end()
+        .and_then(get_home_data);
+
     let renderer = full()
+        .and(warp::method())
         .and(header::headers_cloned())
-        .map(move |path: FullPath, headers: HeaderMap| {
-            println!("GET {}", path.as_str());
-            println!("Headers: {}", headers.len()); //keys().collect::<Vec<&HeaderName>>());
+        .and(home_data)
+        .map(move |
+            path: FullPath,
+            method: Method,
+            headers: HeaderMap,
+            async_data: String,
+        | {
+            println!("{} {}", method, path.as_str());
+            let headers = format!(
+                "{:?}",
+                headers
+                    .iter()
+                    .collect::<HashMap<&HeaderName, &HeaderValue>>()
+            );
             let renderer = Arc::clone(&r_pool);
-            let s = path.as_str().to_string();
-            let result = renderer.lock().unwrap().render(s);
-            result
+            let url = path.as_str().to_string();
+            let ssr_request = RendererRequest::new(
+                url,
+                method.to_string(),
+                headers,
+                async_data.to_owned(),
+            );
+            let result = renderer.lock()
+                .unwrap()
+                .render(ssr_request);
+            (result, async_data)
         })
-        .map(|result| {
-            println!("{}", result);            
+        .map(|(result, async_data)| {
+            let async_data = format!(
+                "<script>window.__ASYNC_DATA__ = '{}';</script>",
+                async_data
+            );
             reply::html(
-                format!("{}{}", IMPORT, result)
+                format!("{}{}{}", async_data, IMPORT, result)
             )
         });
 
