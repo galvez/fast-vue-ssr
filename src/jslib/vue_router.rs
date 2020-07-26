@@ -2,7 +2,7 @@
 
 // vue-router@v3.3.4
 // https://github.com/vuejs/vue-router/blob/v3.3.4/dist/vue-router.esm.js
-pub static VUE_ROUTER: &'static str = r###"
+pub static source: &'static str = r###"
 /*!
   * vue-router v3.3.4
   * (c) 2020 Evan You

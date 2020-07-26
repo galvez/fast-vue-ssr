@@ -1,4 +1,4 @@
-pub static VUE: &'static str = r###"
+pub static source: &'static str = r###"
 const process = {
   env: {}
 }

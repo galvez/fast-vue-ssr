@@ -3,10 +3,14 @@ extern crate lazy_static;
 
 // exposes renderVueComponentToString()
 // See https://ssr.vuejs.org/guide/non-node.html for details
-mod vue;
+mod jslib;
 mod renderer;
+mod request;
 
-use renderer::RendererPool;
+use surf;
+use renderer::{
+    pool::RendererPool,
+};
 use std::io;
 use std::sync::{
     Arc,
@@ -20,6 +24,7 @@ use warp::{
         FullPath,
     },
     reply,
+    Rejection,
     Filter,
     http::{
         HeaderMap,
@@ -29,9 +34,43 @@ use warp::{
     },
 };
 
+use std::boxed::Box;
+use std::error::Error;
+use std::marker::Send;
+use std::marker::Sync;
+use serde::{Deserialize, Serialize};
+use crate::request::RendererRequest;
+
 pub static IMPORT: &'static str = r###"
 <script type="module" src="./static/client.js"></script>
 "###;
+
+
+#[derive(Deserialize, Serialize)]
+struct Ip {
+    ip: String
+}
+
+type HttpCallError = dyn Error + Send + Sync + 'static;
+
+pub async fn get_home_data() -> Result<String, Rejection>  {
+    let result = sample_http_call().await;
+    let data = result.unwrap();
+    println!("get_home_data result {:?}", &data);
+    Ok(data)
+}
+
+async fn sample_http_call() -> Result<String, Box<HttpCallError>> {
+    let uri = "https://httpbin.org/post";
+    let data = &Ip { ip: "129.0.0.1".into() };
+    let res = surf::post(uri).body_json(data)?.await?;
+    assert_eq!(res.status(), 200);
+
+    let uri = "https://api.ipify.org?format=json";
+    let Ip { ip } = surf::get(uri).recv_json().await?;
+    assert!(ip.len() > 10);
+    Ok(ip)
+}
 
 #[tokio::main]
 pub async fn main() -> io::Result<()> {
@@ -40,14 +79,22 @@ pub async fn main() -> io::Result<()> {
 
     let r_pool = Arc::new(Mutex::new(RendererPool::new(64)));
 
+    let home_data = warp::path::end()
+        .and_then(get_home_data);
+
     let renderer = full()
         .and(header::headers_cloned())
-        .map(move |path: FullPath, headers: HeaderMap| {
+        .and(home_data)
+        .map(move |path: FullPath, headers: HeaderMap, data| {
+            println!("data: {}", data);
             println!("GET {}", path.as_str());
             println!("Headers: {}", headers.len()); //keys().collect::<Vec<&HeaderName>>());
             let renderer = Arc::clone(&r_pool);
-            let s = path.as_str().to_string();
-            let result = renderer.lock().unwrap().render(s);
+            let url = path.as_str().to_string();
+            let ssr_request = RendererRequest::new(url);
+            let result = renderer.lock()
+                .unwrap()
+                .render(ssr_request);
             result
         })
         .map(|result| {

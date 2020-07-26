@@ -1,23 +1,35 @@
 use std::sync::mpsc;
 
-pub type Job = Box<RendererRequest>;
-
 pub struct RendererRequest {
-    url: String,
+    pub url: String,
     // method: &'static str,
     // headers: Vec<HeaderName, HeaderValue>,
     // asyncData: String,
-    receiver: mpsc::Sender<String>,
-    sender: mpsc::Sender<String>,
 }
 
 impl RendererRequest {
-	pub fn new (url: String) {
-        let (sender, receiver) = mpsc::channel();
+	pub fn new(url: String) -> RendererRequest {
         RendererRequest {
         	url,
-        	receiver,
-        	sender,
         }
 	}
 }
+
+pub struct RendererJob {
+	pub request: RendererRequest,
+    pub receiver: mpsc::Receiver<String>,
+    pub sender: mpsc::Sender<String>,	
+}
+
+impl RendererJob {
+	pub fn new (request: RendererRequest) -> RendererJob {
+		let (sender, receiver) = mpsc::channel();
+		RendererJob {
+			request,
+			sender,
+			receiver
+		}
+	}
+}
+
+// pub type Job = Box<&'a RendererRequest>;

@@ -1,7 +1,7 @@
 
 // vue-server-render@2.6.11
 // https://github.com/vuejs/vue/blob/v2.6.11/packages/vue-server-renderer/basic.js
-pub static VUE_SERVER_RENDERER: &'static str = r###"
+pub static source: &'static str = r###"
 var emptyObject = Object.freeze({});
 
 // These helpers produce better VM code in JS engines due to their
