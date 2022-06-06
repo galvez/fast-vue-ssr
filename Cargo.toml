@@ -10,7 +10,7 @@ edition = "2018"
 lazy_static = "1.4.0"
 quick-js = "0.3.3"
 serde = { version = "1.0.114", features = ["derive"] }
-tokio = { version = "0.2", features = ["macros"] }
+tokio = { version = "1.8", features = ["macros"] }
 http = "0.2.1"
 warp = "0.2"
 surf = "1.0.3"
