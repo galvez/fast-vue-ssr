@@ -68,6 +68,8 @@ pub async fn main() -> io::Result<()> {
                 "{:?}",
                 headers
                     .iter()
+                    .filter(|(name, _)| name != &&HeaderName::from_static("sec-ch-ua-platform"))
+                    .filter(|(name, _)| name != &&HeaderName::from_static("sec-ch-ua"))
                     .collect::<HashMap<&HeaderName, &HeaderValue>>()
             );
             let renderer = Arc::clone(&r_pool);

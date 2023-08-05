@@ -106,6 +106,8 @@ impl RendererPool {
                         &job.request.headers
                     ).as_str(),
                 );
+
+                 println!("header result {:?}", &job.request.headers);
                 // Set async data
                 RendererPool::run_js(
                     &ctx,
